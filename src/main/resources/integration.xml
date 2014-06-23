@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-http="http://www.springframework.org/schema/integration/http"
+	xmlns:file="http://www.springframework.org/schema/integration/file"
+	xmlns:int-mqtt="http://www.springframework.org/schema/integration/mqtt"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/mqtt http://www.springframework.org/schema/integration/mqtt/spring-integration-mqtt.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+		http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http-2.2.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+
+<!--  Sample endpoint to make sure data is getting across. -->
+
+	<file:outbound-channel-adapter id="files"
+		mode="APPEND" charset="UTF-8" directory="./"
+		filename-generator-expression="'../../../bitcoin.txt'" />
+
+
+<!--  Coinbase Poller -->
+	<int:channel id="coinBaseHttp"></int:channel>
+	<int:inbound-channel-adapter id="coinbasePoller"
+		expression="''" channel="coinbaseHttp">
+		<int:poller fixed-rate="10000" />
+	</int:inbound-channel-adapter>
+
+
+
+<!--  Coinbase http outbound gateway -->
+	<int:channel id="transformChannel"></int:channel>
+	<int-http:outbound-gateway id='coinbasegateway'
+		request-channel='coinbaseHttp' url='https://coinbase.com/api/v1/prices/buy'
+		http-method='GET' expected-response-type='java.lang.String' charset='UTF-8'
+		reply-timeout='10000' reply-channel='transformChannel'>
+	</int-http:outbound-gateway>
+
+
+<!-- MQTT Outbound Channel Adapter-->
+	<int:channel id="mqttOut"></int:channel>
+	<bean id="clientFactory"
+		class="org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory">
+		<property name="userName" value="guest" />
+		<property name="password" value="guest" />
+	</bean>
+	<int-mqtt:outbound-channel-adapter
+		id="mqttOutbound" client-id="guest" url="tcp://localhost:1883"
+		default-topic="xd.mqtt.test" client-factory="clientFactory" default-qos="1"
+		default-retained="false" channel="mqttOut" />
+
+<!-- BitStampHttp -->
+<int:channel id="bitStampHttp"></int:channel>
+
+</beans>

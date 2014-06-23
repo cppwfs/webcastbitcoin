@@ -1,0 +1,39 @@
+buildscript {
+	repositories {
+		maven { url "http://repo.spring.io/libs-snapshot" }
+		mavenLocal()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:1.1.0.RELEASE")
+
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+mainClassName="org.bitcoinmonitor.Main"
+
+compileJava {
+    sourceCompatibility = 1.7
+}
+
+jar {
+	baseName = 'bitcoinmonitor-integration'
+	version =  '0.1.0'
+}
+
+repositories { 
+	maven { url "http://repo.spring.io/libs-snapshot" } }
+
+dependencies {
+
+	compile("org.springframework.boot:spring-boot-starter-integration")
+	compile("com.fasterxml.jackson.core:jackson-databind")
+	compile "org.springframework.integration:spring-integration-mqtt:4.0.2.RELEASE"
+	
+	testCompile("junit:junit")
+}
+
+task wrapper(type: Wrapper) { gradleVersion = '1.11' }
